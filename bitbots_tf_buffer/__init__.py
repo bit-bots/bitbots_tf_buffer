@@ -2,6 +2,7 @@ from typing import Optional
 
 import tf2_ros as tf2
 
+from rclpy.node import Node
 from builtin_interfaces.msg import Duration as DurationMsg
 from builtin_interfaces.msg import Time as TimeMsg
 from geometry_msgs.msg import TransformStamped
@@ -18,18 +19,32 @@ class Buffer(tf2.BufferCore, tf2.BufferInterface):
     It spawns a new node with the suffix "_tf" to handle the C++ side of the ROS communication.
     """
 
-    def __init__(self, node, cache_time: Optional[Duration] = None):
+    def __init__(self, cache_time: Optional[Duration] = None, node: Optional[Node] = None):
         if cache_time is None:
             cache_time = Duration(seconds=10.0)
 
         tf2.BufferCore.__init__(self, cache_time)
         tf2.BufferInterface.__init__(self)
 
-        self._impl = CppBuffer(serialize_message(Duration.to_msg(cache_time)), node)
+        self.cache_time = cache_time
+        self._impl: Optional[CppBuffer] = None
+
+        # If a node is provided, we can set the node directly
+        if node is not None:
+            self.set_node(node)
+            
+    def set_node(self, node: Node):
+        """
+        This API is used instead of the constructor to set the node.
+        This way we can have a dummy TransformListener and therefore
+        keep compatibility with the official implementation.
+        """
+        self._impl = CppBuffer(serialize_message(Duration.to_msg(self.cache_time)), node)
 
     def lookup_transform(
         self, target_frame: str, source_frame: str, time: Time | TimeMsg, timeout: Optional[Duration | DurationMsg] = None
     ) -> TransformStamped:
+        assert self._impl is not None, "Buffer has not been initialized with a node. You either need to pass a node to the constructor or have a TransformListener set up."
         # Handle timeout as None
         timeout = timeout or Duration()
         # Call cpp implementation
@@ -44,6 +59,7 @@ class Buffer(tf2.BufferCore, tf2.BufferInterface):
     def can_transform(
         self, target_frame: str, source_frame: str, time: Time | TimeMsg, timeout: Optional[Duration | DurationMsg] = None
     ) -> bool:
+        assert self._impl is not None, "Buffer has not been initialized with a node. You either need to pass a node to the constructor or have a TransformListener set up."
         # Handle timeout as None
         timeout = timeout or Duration()
         # Call cpp implementation
@@ -53,3 +69,17 @@ class Buffer(tf2.BufferCore, tf2.BufferInterface):
             serialize_message(time if isinstance(time, TimeMsg) else Time.to_msg(time)),
             serialize_message(timeout if isinstance(timeout, DurationMsg) else Duration.to_msg(timeout)),
         )
+    
+class TransformListener(tf2.TransformListener):
+    """
+    A dummy TransformListener that just sets the node into the C++ Buffer.
+    This is done for compatibility with the previous implementation.
+    """
+    def __init__(
+        self,
+        buffer: Buffer,
+        node: Node,
+        *ignored_args,
+        **ignored_kwargs
+    ) -> None:
+        buffer.set_node(node)

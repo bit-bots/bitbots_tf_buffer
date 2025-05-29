@@ -1,6 +1,6 @@
 # Bit-Bots TF Buffer
 
-This is a nearly drop-in replacement for `tf2_ros.Buffer` in Python. It wraps a C++ node that holds the tf buffer and listener. The interface should be the same as the original `tf2_ros.Buffer`, except that we need to pass a reference to the node to the constructor (it is not optional anymore and the order of the arguments is changed therefore).
+This is a nearly drop-in replacement for `tf2_ros.Buffer` in Python. It wraps a C++ node that holds the tf buffer and listener. The interface should be the same as the original `tf2_ros.Buffer` and `tf2_ros.TransformListener`, except for e.g. qos settings that are not supported for now.
 
 ## Why?
 
@@ -18,19 +18,8 @@ In addition to that, this solution also reduces the amount of executor deadlock 
 
 ## Usage
 
-- Replace `from tf2_ros import Buffer, TransformListener` with `from bitbots_tf_buffer import
-Buffer`.
-- Remove the `TransformListener` from the code
-- Pass a reference to the node to the constructor of `Buffer`:
-
-```python
-from bitbots_tf_buffer import Buffer
-
-class MyNode(Node):
-    def __init__(self):
-        super().__init__('my_node')
-        self.tf_buffer = Buffer(self)
-```
+Replace `from tf2_ros import Buffer, TransformListener` with `from bitbots_tf_buffer import
+Buffer, TransformListener`.
 
 ## Installation
 
