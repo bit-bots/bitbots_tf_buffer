@@ -70,7 +70,7 @@ class Buffer(tf2.BufferCore, tf2.BufferInterface):
             serialize_message(timeout if isinstance(timeout, DurationMsg) else Duration.to_msg(timeout)),
         )
     
-class TransformListener(tf2.TransformListener):
+class TransformListener:
     """
     A dummy TransformListener that just sets the node into the C++ Buffer.
     This is done for compatibility with the previous implementation.
