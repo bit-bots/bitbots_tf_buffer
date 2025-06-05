@@ -73,7 +73,7 @@ class Buffer(tf2.BufferCore, tf2.BufferInterface):
 class TransformListener:
     """
     A dummy TransformListener that just sets the node into the C++ Buffer.
-    This is done for compatibility with the previous implementation.
+    This is done for compatibility with the original API implementation.
     """
     def __init__(
         self,
