@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.10)
 project(bitbots_tf_buffer)
 
 # Add support for C++17
@@ -36,14 +36,14 @@ add_compile_options(-Wall -Wno-unused)
 
 pybind11_add_module(cpp_wrapper SHARED src/bitbots_tf_buffer.cpp)
 
-ament_target_dependencies(
-  cpp_wrapper
-  PUBLIC
-  rclcpp
-  rcl
-  tf2
-  tf2_ros
-  ros2_python_extension)
+target_include_directories(cpp_wrapper PUBLIC ${ros2_python_extension_INCLUDE_DIRS})
+target_link_libraries(cpp_wrapper PUBLIC
+  rcl::rcl
+  rclcpp::rclcpp
+  tf2::tf2
+  tf2_ros::static_transform_broadcaster_node
+  tf2_ros::tf2_ros
+)
 
 target_link_libraries(cpp_wrapper PRIVATE pybind11::module)
 
